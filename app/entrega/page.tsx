@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Package, Search, Filter, Clock, Calendar, User, MapPin, ChevronRight, Truck, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import type { JSX } from "react"
 
 interface Requisicao {
   id: string
@@ -120,7 +121,7 @@ export default async function EntregaPage() {
                       <div key={item.id} className="bg-white/5 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-1">
                           <p className="font-medium text-sm">{item.produto_nome}</p>
-                          <Badge
+                      <Badge
                             variant="secondary"
                             className={`text-xs ${
                               item.status_item === "separado"
@@ -129,7 +130,9 @@ export default async function EntregaPage() {
                                   ? "bg-green-500"
                                   : item.status_item === "parcial"
                                     ? "bg-yellow-500"
-                                    : "bg-gray-500"
+                                    : item.status_item === "em_falta"
+                                      ? "bg-red-500"
+                                      : "bg-gray-500"
                             }`}
                           >
                             {item.status_item === "separado"
@@ -138,7 +141,9 @@ export default async function EntregaPage() {
                                 ? "Entregue"
                                 : item.status_item === "parcial"
                                   ? "Parcial"
-                                  : "Outro"}
+                                  : item.status_item === "em_falta"
+                                    ? "Em Falta"
+                                    : "Outro"}
                           </Badge>
                         </div>
                         <p className="text-xs text-gray-400">
