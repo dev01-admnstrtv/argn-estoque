@@ -5,6 +5,15 @@ import Link from "next/link"
 import Image from "next/image"
 import { queries } from "@/lib/database"
 import SeparacaoItemForm from "@/components/separacao-item-form"
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+async function finalizarSeparacaoAction(formData: FormData) {
+  "use server"
+  const id = Number(formData.get("requisicaoId"))
+  await queries.updateRequisicaoStatus(id, "em_entrega")
+  revalidatePath("/separacao")
+  redirect("/separacao")
+}
 
 const turnoLabels = {
   manha: "Manhã",
@@ -129,6 +138,16 @@ export default async function DetalheSeparacaoPage({ params }: PageProps) {
             <SeparacaoItemForm key={item.id} item={item} />
           ))}
         </div>
+
+        {/* Botão Finalizar Separação */}
+        {itens.length > 0 && itens.every(item => item.status_item === "separado" || item.status_item === "em_falta") && requisicao.status === "em_separacao" && (
+          <form action={finalizarSeparacaoAction} className="mt-8 flex justify-end">
+            <input type="hidden" name="requisicaoId" value={requisicao.id} />
+            <Button type="submit" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+              Finalizar Separação
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   )

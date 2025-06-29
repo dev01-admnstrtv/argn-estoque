@@ -37,6 +37,7 @@ export default function NovaRequisicaoForm({ produtos, setores }: NovaRequisicao
   const [produtoSelecionado, setProdutoSelecionado] = useState("")
   const [openCombobox, setOpenCombobox] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [observacoes, setObservacoes] = useState("")
 
   const router = useRouter()
 
@@ -77,7 +78,7 @@ export default function NovaRequisicaoForm({ produtos, setores }: NovaRequisicao
         setor_id: Number.parseInt(setorId),
         data_entrega_prevista: dataEntrega,
         turno,
-        observacoes: "Requisição criada via sistema",
+        observacoes: observacoes || "Requisição criada via sistema",
         itens: itensRequisicao.map((item) => ({
           produto_id: item.produto_id,
           quantidade_solicitada: item.quantidadeSolicitada,
@@ -111,6 +112,7 @@ export default function NovaRequisicaoForm({ produtos, setores }: NovaRequisicao
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+       
         {/* Informações Básicas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -172,7 +174,20 @@ export default function NovaRequisicaoForm({ produtos, setores }: NovaRequisicao
             <Input value="Maria Silva" disabled className="bg-white/5 border-white/20 text-white" />
           </div>
         </div>
-
+        {/* Observações */}
+        <div className="space-y-2">
+          <Label htmlFor="observacoes" className="flex items-center space-x-2">
+            <span>Observações</span>
+          </Label>
+          <Input
+            id="observacoes"
+            type="text"
+            value={observacoes}
+            onChange={(e) => setObservacoes(e.target.value)}
+            className="bg-white/5 border-white/20 text-white placeholder:text-gray-400"
+            placeholder="Digite observações adicionais (opcional)"
+          />
+        </div>
         {/* Adicionar Produtos */}
         <div className="space-y-4">
           <Label className="text-lg font-semibold">Itens da Requisição</Label>
@@ -207,9 +222,6 @@ export default function NovaRequisicaoForm({ produtos, setores }: NovaRequisicao
                             <Badge variant="secondary" className="text-xs">
                               {produto.categoria}
                             </Badge>
-                            <span>
-                              Estoque: {produto.estoque_atual} {produto.unidade}
-                            </span>
                           </div>
                         </div>
                       </CommandItem>
@@ -255,7 +267,6 @@ export default function NovaRequisicaoForm({ produtos, setores }: NovaRequisicao
                         className="bg-white/5 border-white/20 text-white"
                         min="0"
                         step="0.1"
-                        disabled
                       />
                     </div>
 

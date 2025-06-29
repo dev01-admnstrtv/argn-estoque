@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Package, Clock, AlertCircle, Calendar, User, MapPin, ChevronRight, PackageCheck } from "lucide-react"
+import { Package, Clock, AlertCircle, Calendar, User, MapPin, ChevronRight, PackageCheck, Truck } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { queries } from "@/lib/database"
@@ -201,6 +201,17 @@ export default async function SeparacaoPage({ searchParams }: PageProps) {
 }
 
 // Componente para o card da separação
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+
+async function enviarParaEntregaAction(formData: FormData) {
+  "use server"
+  const id = Number(formData.get("requisicaoId"))
+  await queries.updateRequisicaoStatus(id, "em_entrega")
+  revalidatePath("/separacao")
+  redirect("/entrega")
+}
+
 async function SeparacaoCard({ requisicao }: { requisicao: any }) {
   // Buscar itens da requisição
   const itens = await queries.getRequisicaoItens(requisicao.id)
@@ -307,13 +318,22 @@ async function SeparacaoCard({ requisicao }: { requisicao: any }) {
             )}
           </div>
 
-          <div className="ml-4">
+          <div className="ml-4 flex flex-col gap-2 items-end">
             <Link href={`/separacao/${requisicao.id}`}>
               <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                 <ChevronRight className="w-4 h-4 mr-2" />
                 {requisicao.status === "pendente" ? "Iniciar Separação" : "Continuar Separação"}
               </Button>
             </Link>
+            {requisicao.status === "separado" && (
+              <form action={enviarParaEntregaAction}>
+                <input type="hidden" name="requisicaoId" value={requisicao.id} />
+                <Button type="submit" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 w-full mt-2">
+                  <Truck className="w-4 h-4 mr-2" />
+                  Enviar para entrega
+                </Button>
+              </form>
+            )}
           </div>
         </div>
       </CardContent>

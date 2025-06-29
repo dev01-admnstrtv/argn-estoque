@@ -37,7 +37,7 @@ export default async function RequisicaoEstoque() {
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Cards de Insights */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card className="bg-black/20 backdrop-blur-sm border-white/10 text-white">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
@@ -73,7 +73,7 @@ export default async function RequisicaoEstoque() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </div>*/}
 
         {/* Formulário Principal */}
         <NovaRequisicaoForm produtos={produtos} setores={setores} />

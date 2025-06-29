@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,18 +35,32 @@ const turnoLabels = {
   noite: "Noite",
 }
 
+interface Requisicao {
+  id: number
+  codigo: string
+  solicitante_nome: string
+  setor_nome: string
+  data_solicitacao: string
+  status: string
+  turno: string
+  setor_id: number
+  data_entrega_prevista: string
+  total_itens: number
+  observacoes?: string
+}
+
 interface PageProps {
   searchParams: {
-    status?: string
-    setor?: string
-    busca?: string
+    status?: string | undefined
+    setor?: string | undefined
+    busca?: string | undefined
   }
 }
 
-export default async function RequisicoesPage({ searchParams }: PageProps) {
+export default async function RequisicoesPage({ searchParams = { status: undefined, setor: undefined, busca: undefined } }: PageProps) {
   // Buscar requisições do banco
   const requisicoes = await queries.getRequisicoes({
-    status: searchParams.status !== "todos" ? searchParams.status : undefined,
+    status: searchParams?.status !== "todos" ? searchParams?.status : undefined,
   })
 
   // Buscar setores para o filtro
@@ -53,7 +68,7 @@ export default async function RequisicoesPage({ searchParams }: PageProps) {
 
   // Filtrar por busca se necessário
   const requisicoesFiltered = requisicoes.filter((req) => {
-    if (!searchParams.busca) return true
+    if (!searchParams?.busca) return true
 
     const busca = searchParams.busca.toLowerCase()
     return (
@@ -63,17 +78,17 @@ export default async function RequisicoesPage({ searchParams }: PageProps) {
     )
   })
 
-  // Agrupar por data
+  // Agrupar por data de entrega
   const requisicoesAgrupadas = requisicoesFiltered.reduce(
     (acc, req) => {
-      const data = new Date(req.data_solicitacao).toISOString().split("T")[0]
+      const data = new Date(req.data_entrega_prevista).toISOString().split("T")[0]
       if (!acc[data]) {
         acc[data] = []
       }
       acc[data].push(req)
       return acc
     },
-    {} as Record<string, any[]>,
+    {} as Record<string, Requisicao[]>,
   )
 
   // Ordenar datas (mais recente primeiro)
@@ -117,24 +132,25 @@ export default async function RequisicoesPage({ searchParams }: PageProps) {
         {/* Filtros */}
         <RequisicoesFilter setores={setores} />
 
-        {/* Lista de Requisições Agrupadas */}
-        {datasOrdenadas.map((data) => (
-          <div key={data} className="space-y-4">
-            <div className="flex items-center space-x-2 text-lg font-semibold">
-              <Calendar className="w-5 h-5 text-blue-400" />
-              <span>{formatarData(data)}</span>
-              <Badge variant="secondary" className="ml-2">
-                {requisicoesAgrupadas[data].length} requisições
-              </Badge>
-            </div>
-
-            <div className="grid gap-4">
-              {requisicoesAgrupadas[data].map((requisicao) => (
-                <RequisicaoCard key={requisicao.id} requisicao={requisicao} />
-              ))}
-            </div>
-          </div>
-        ))}
+        {/* Lista de Requisições Agrupadas com Accordion */}
+        <Accordion type="multiple" className="w-full">
+          {datasOrdenadas.map((data) => (
+            <AccordionItem key={data} value={data} className="border-b border-white/10">
+              <AccordionTrigger className="flex items-center space-x-2 text-lg font-semibold bg-black/10 px-4 py-3 rounded-t">
+                <Calendar className="w-5 h-5 text-blue-400" />
+                <span>{formatarData(data)}</span>
+                <Badge variant="secondary" className="ml-2">
+                  {requisicoesAgrupadas[data].length} requisições
+                </Badge>
+              </AccordionTrigger>
+              <AccordionContent className="grid gap-4 px-2 pb-4">
+                {requisicoesAgrupadas[data].map((requisicao: Requisicao) => (
+                  <RequisicaoCard key={requisicao.id} requisicao={requisicao as RequisicaoCardProps['requisicao']} />
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
 
         {requisicoesFiltered.length === 0 && (
           <Card className="bg-black/20 backdrop-blur-sm border-white/10 text-white">
@@ -150,8 +166,13 @@ export default async function RequisicoesPage({ searchParams }: PageProps) {
   )
 }
 
+// Tipo para as props do card da requisição
+type RequisicaoCardProps = {
+  requisicao: Requisicao
+}
+
 // Componente para o card da requisição
-async function RequisicaoCard({ requisicao }: { requisicao: any }) {
+async function RequisicaoCard({ requisicao }: RequisicaoCardProps) {
   // Buscar itens da requisição
   const itens = await queries.getRequisicaoItens(requisicao.id)
 
@@ -161,7 +182,7 @@ async function RequisicaoCard({ requisicao }: { requisicao: any }) {
   return (
     <Card className="bg-black/20 backdrop-blur-sm border-white/10 text-white">
       <CardContent className="p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="flex-1">
             <div className="flex items-start justify-between mb-4">
               <div className="space-y-1">
@@ -255,9 +276,9 @@ async function RequisicaoCard({ requisicao }: { requisicao: any }) {
             )}
           </div>
 
-          <div className="ml-4">
-            <Link href={`/requisicoes/${requisicao.id}`}>
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+          <div className="mt-4 md:mt-0 md:ml-4 flex md:block justify-end">
+            <Link href={`/requisicoes/${requisicao.id}`} className="w-full md:w-auto">
+              <Button className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                 <ChevronRight className="w-4 h-4 mr-2" />
                 Ver Detalhes
               </Button>
